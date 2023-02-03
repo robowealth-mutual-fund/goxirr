@@ -20,6 +20,7 @@ type Options func(*Option)
 type Option struct {
 	round bool
 	digit float64
+	guess float64
 }
 
 // WithRound options for calculate with round irr
@@ -30,12 +31,21 @@ func WithRound(decimalPoint int) Options {
 	}
 }
 
+// WithGuess options for calculate with guess config
+func WithGuess(guess float64) Options {
+	return func(o *Option) {
+		o.guess = guess
+	}
+}
+
 // Transactions represent a cash flow consisting of individual transactions
 type Transactions []Transaction
 
 // Xirr returns the Internal Rate of Return (IRR) for an irregular series of cash flows (XIRR)
 func Xirr(transactions Transactions, opts ...Options) float64 {
-	var o = &Option{}
+	var o = &Option{
+		guess: 0.05,
+	}
 	for _, opt := range opts {
 		opt(o)
 	}
@@ -47,7 +57,6 @@ func Xirr(transactions Transactions, opts ...Options) float64 {
 
 	residual := 1.0
 	step := 0.05
-	guess := 0.05
 	epsilon := 0.0001
 	limit := 10000
 
@@ -57,20 +66,20 @@ func Xirr(transactions Transactions, opts ...Options) float64 {
 		residual = 0.0
 
 		for i, t := range transactions {
-			residual += t.Cash / math.Pow(guess, years[i])
+			residual += t.Cash / math.Pow(o.guess, years[i])
 		}
 
 		if math.Abs(residual) > epsilon {
 			if residual > 0 {
-				guess += step
+				o.guess += step
 			} else {
-				guess -= step
+				o.guess -= step
 				step /= 2.0
 			}
 		}
 	}
 
-	irr := (guess - 1) * 100
+	irr := (o.guess - 1) * 100
 	if o.round {
 		return math.Round(irr*o.digit) / o.digit
 	}

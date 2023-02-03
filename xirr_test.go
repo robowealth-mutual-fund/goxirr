@@ -79,7 +79,7 @@ func TestXirr(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Xirr(tt.args.transactions, WithRound(2)); got != tt.want {
+			if got := Xirr(tt.args.transactions, WithRound(2), WithGuess(0.05)); got != tt.want {
 				t.Errorf("Xirr() = %v, want %v", got, tt.want)
 			}
 		})
